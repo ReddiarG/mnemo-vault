@@ -5,10 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from db import engine
 from models.user import Base as UserBase
-
+from models.content import Base as ContentBase
 
 # Initialize the database
 UserBase.metadata.create_all(bind=engine)
+ContentBase.metadata.create_all(bind=engine)
 
 # FastAPI application
 app = FastAPI(
