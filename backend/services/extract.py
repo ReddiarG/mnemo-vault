@@ -1,13 +1,11 @@
 # Content Extraction Services
 import os
 import requests
-from typing import List, Dict, Any, Tuple,Optional
+from typing import List, Dict, Any, Tuple, Optional
 from bs4 import BeautifulSoup
-import markdown
 from sqlalchemy.orm import Session
-
 from models.content import UploadedContent, ContentChunk
-# TODO: from services.chunking import chunk_text
+from services.chunking import chunk_text
 
 
 # Extract and chunk text from a URL
@@ -26,10 +24,31 @@ async def extract_text_from_url(url: str, user_id: int, kb_id: int, db: Session)
         # Extract metadata
         title = soup.title.string if soup.title else f"Untitled: {url}"
         links = [link.get('href') for link in soup.find_all('a') if link.get('href')]
+
+        # Chunk text
+        chunks = []
+        text_chunks = chunk_text(extracted_text)
+        for i, text_chunk in enumerate(text_chunks):
+            chunk = ContentChunk(
+                content_id=uploaded_content.content_id,
+                chunk_number=i,
+                chunk_text=text_chunk,
+                chunk_metadata={
+                    "source_url": url,
+                    "source_name": title,
+                    # TODO: add more metadata
+                }
+            )
+            chunks.append(chunk)
+            db.add(chunk)
+        
+        db.commit()
+
         content_metadata = {
             "title": title,
             "source_url": url,
             "links": links,
+            "chunk_count": len(chunks),
             # TODO: add more metadata e.g. author, date, images, etc.
         }
 
@@ -46,9 +65,6 @@ async def extract_text_from_url(url: str, user_id: int, kb_id: int, db: Session)
         db.add(uploaded_content)
         db.commit()
         db.refresh(uploaded_content)
-
-        # TODO: Implement chunking
-        chunks = []
 
         return uploaded_content, chunks
     

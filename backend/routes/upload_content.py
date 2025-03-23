@@ -42,9 +42,32 @@ async def upload_url(
         db.commit()
         db.refresh(kb)
     
-    # TODO: Implement content extraction from URL
     uploaded_content, chunks = await extract_text_from_url(str(request.url), current_user.user_id, kb.kb_id, db)
-    return uploaded_content
+
+    # TODO:Schedule background tasks
+    if chunks:
+        def process_background_tasks(chunks: List[ContentChunk], user_id: int, kb_id: int):
+            # TODO: Implement embedding
+            # TODO: Implement Topic Generation
+            # TODO: Implement Summary Generation
+            pass
+
+        background_tasks.add_task(
+            process_background_tasks,
+            chunks,
+            current_user.user_id,
+            kb.kb_id,
+        )
+    
+    # Return response
+    return ContentResponse(
+        content_id=uploaded_content.content_id,
+        original_source_name=uploaded_content.original_source_name,
+        content_type=uploaded_content.content_type,
+        content_size=uploaded_content.content_size,
+        topic_name="Processing...",
+        topic_summary="Processing...",
+    )
 
 # File upload endpoint
 @router.post("/file", response_model=ContentResponse)
