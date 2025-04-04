@@ -10,6 +10,7 @@ from models.content import KnowledgeBase, UploadedContent, ContentChunk
 from services.auth import get_current_user
 
 from services.extract import extract_text_from_url # TODO: add extract_text_from_file
+from services.embedding import embed_chunks
 
 # Initialize the router
 router = APIRouter()
@@ -20,6 +21,8 @@ class ContentResponse(BaseModel):
     original_source_name: str
     content_type: str
     content_size: int
+    topic_name: str
+    topic_summary: str
 
 # URL upload endpoint
 class UrlUploadRequest(BaseModel):
@@ -42,12 +45,15 @@ async def upload_url(
         db.commit()
         db.refresh(kb)
     
-    uploaded_content, chunks = await extract_text_from_url(str(request.url), current_user.user_id, kb.kb_id, db)
+    # Extract and chunk text from URL
+    uploaded_content_obj, chunks = await extract_text_from_url(str(request.url), current_user.user_id, kb.kb_id, db)
 
-    # TODO:Schedule background tasks
+    # TODO: Schedule this as background tasks
     if chunks:
         def process_background_tasks(chunks: List[ContentChunk], user_id: int, kb_id: int):
-            # TODO: Implement embedding
+            # Embed chunks
+            embed_chunks(chunks, user_id, kb_id)
+
             # TODO: Implement Topic Generation
             # TODO: Implement Summary Generation
             pass
@@ -61,10 +67,10 @@ async def upload_url(
     
     # Return response
     return ContentResponse(
-        content_id=uploaded_content.content_id,
-        original_source_name=uploaded_content.original_source_name,
-        content_type=uploaded_content.content_type,
-        content_size=uploaded_content.content_size,
+        content_id=uploaded_content_obj.content_id,
+        original_source_name=uploaded_content_obj.original_source_name,
+        content_type=uploaded_content_obj.content_type,
+        content_size=uploaded_content_obj.content_size,
         topic_name="Processing...",
         topic_summary="Processing...",
     )
