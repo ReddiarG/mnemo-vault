@@ -1,6 +1,5 @@
 # Content Upload Endpoints
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Form, BackgroundTasks
+from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, HttpUrl
 
@@ -9,8 +8,7 @@ from models.user import User
 from models.content import KnowledgeBase, UploadedContent, ContentChunk
 from services.auth import get_current_user
 
-from services.extract import extract_text_from_url # TODO: add extract_text_from_file
-from services.embedding import embed_chunks
+from services.extract import extract_md_from_url # TODO: add extract_text_from_file
 
 # Initialize the router
 router = APIRouter()
@@ -30,7 +28,6 @@ class UrlUploadRequest(BaseModel):
 
 @router.post("/url", response_model=ContentResponse)
 async def upload_url(
-    background_tasks: BackgroundTasks,
     request: UrlUploadRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -46,25 +43,25 @@ async def upload_url(
         db.refresh(kb)
     
     # Extract and chunk text from URL
-    uploaded_content_obj, chunks = await extract_text_from_url(str(request.url), current_user.user_id, kb.kb_id, db)
+    extracted_content = extract_md_from_url(str(request.url))
 
-    # TODO: Schedule this as background tasks
-    if chunks:
-        def process_background_tasks(chunks: List[ContentChunk], user_id: int, kb_id: int):
-            # Embed chunks
-            embed_chunks(chunks, user_id, kb_id)
+    # TODO: Chunk, Embed, Summarize, and assign Topic
+    if extracted_content:
+        pass
+        
+    uploaded_content_obj = UploadedContent(
+        user_id=current_user.user_id,
+        kb_id=kb.kb_id,
+        original_source_name="TODO...",
+        content_type="text/html",
+        content_size=len(extracted_content["markdown"]),
+        content_metadata="TODO...",
+        content_text=extracted_content["markdown"],
+    )
+    db.add(uploaded_content_obj)
+    db.commit()
+    db.refresh(uploaded_content_obj)
 
-            # TODO: Implement Topic Generation
-            # TODO: Implement Summary Generation
-            pass
-
-        background_tasks.add_task(
-            process_background_tasks,
-            chunks,
-            current_user.user_id,
-            kb.kb_id,
-        )
-    
     # Return response
     return ContentResponse(
         content_id=uploaded_content_obj.content_id,
@@ -75,10 +72,9 @@ async def upload_url(
         topic_summary="Processing...",
     )
 
-# File upload endpoint
+# TODO: File upload endpoint
 @router.post("/file", response_model=ContentResponse)
 async def upload_file(
-    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
