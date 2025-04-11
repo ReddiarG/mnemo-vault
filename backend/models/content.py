@@ -9,19 +9,20 @@ class KnowledgeBase(Base):
 
     # Columns
     kb_id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.user_id"), ondelete="CASCADE", nullable=False)
+    user_id = Column(Integer, ForeignKey("user.user_id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
     # Relationships
     user = relationship("User", back_populates="knowledge_base")
+    uploaded_content = relationship("UploadedContent", back_populates="knowledge_base", cascade="all, delete")
 
 class UploadedContent(Base):
     __tablename__ = "uploaded_content"
 
     # Columns
     content_id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.user_id"), ondelete="CASCADE", nullable=False)
-    kb_id = Column(Integer, ForeignKey("knowledge_base.kb_id"), ondelete="CASCADE", nullable=False)
+    user_id = Column(Integer, ForeignKey("user.user_id", ondelete="CASCADE"), nullable=False)
+    kb_id = Column(Integer, ForeignKey("knowledge_base.kb_id", ondelete="CASCADE"), nullable=False)
     original_source_name = Column(String(255), nullable=False)
     content_type = Column(String, nullable=False)
     content_size = Column(Integer, nullable=False)
@@ -33,18 +34,20 @@ class UploadedContent(Base):
     # Relationships
     user = relationship("User")
     knowledge_base = relationship("KnowledgeBase", back_populates="uploaded_content")
+    # TODO:
+    # content_chunks = relationship("ContentChunks", back_populates="uploaded_content", cascade="all, delete")
     
-class ContentChunk(Base):
-    __tablename__ = "content_chunk"
+# class ContentChunks(Base):
+#     __tablename__ = "content_chunks"
 
-    # Columns
-    chunk_id = Column(Integer, primary_key=True, index=True)
-    content_id = Column(Integer, ForeignKey("uploaded_content.content_id"), ondelete="CASCADE", nullable=False)
-    chunk_number = Column(Integer, nullable=False)
-    chunk_text = Column(Text, nullable=False)
-    created_at = Column(DateTime, server_default=func.now(), nullable=False)
-    chunk_metadata = Column(JSON, nullable=True)
+#     # Columns
+#     chunk_id = Column(Integer, primary_key=True, index=True)
+#     content_id = Column(Integer, ForeignKey("uploaded_content.content_id", ondelete="CASCADE"), nullable=False)
+#     chunk_number = Column(Integer, nullable=False)
+#     chunk_text = Column(Text, nullable=False)
+#     created_at = Column(DateTime, server_default=func.now(), nullable=False)
+#     chunk_metadata = Column(JSON, nullable=True)
 
-    # Relationships
-    content = relationship("UploadedContent", back_populates="content_chunk")
+#     # Relationships
+#     content = relationship("UploadedContent", back_populates="content_chunks")
 

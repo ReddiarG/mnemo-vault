@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, ArrowLeft, Loader2, Brain } from "lucide-react"
+import { register } from "@/lib/api"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -23,13 +24,13 @@ export default function RegisterPage() {
     setError("")
 
     const formData = new FormData(event.currentTarget)
-    const name = formData.get("name") as string
+    const fullName = formData.get("fullName") as string
     const email = formData.get("email") as string
     const password = formData.get("password") as string
     const confirmPassword = formData.get("confirmPassword") as string
 
     // Basic validation
-    if (!name || !email || !password || !confirmPassword) {
+    if (!fullName || !email || !password || !confirmPassword) {
       setError("All fields are required")
       setIsLoading(false)
       return
@@ -42,24 +43,8 @@ export default function RegisterPage() {
     }
 
     try {
-      // Replace with your actual API endpoint
-      const response = await fetch("YOUR_FASTAPI_ENDPOINT/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.detail || "Registration failed")
-      }
+      // Use the register function from our API client
+      await register(fullName, email, password)
 
       // Redirect to login page on success
       router.push("/login?registered=true")
@@ -108,12 +93,12 @@ export default function RegisterPage() {
 
             <form onSubmit={onSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-gray-300">
+                <Label htmlFor="fullName" className="text-gray-300">
                   Full Name
                 </Label>
                 <Input
-                  id="name"
-                  name="name"
+                  id="fullName"
+                  name="fullName"
                   placeholder="John Doe"
                   required
                   className="bg-gray-800/50 border-gray-700 text-gray-100 focus:border-cyan-500 focus:ring-cyan-500/20"

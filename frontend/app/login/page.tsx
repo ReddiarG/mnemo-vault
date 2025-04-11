@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, ArrowLeft, CheckCircle, Loader2, Brain } from "lucide-react"
+import { login } from "@/lib/api"
+import { setAuthToken, setRefreshToken } from "@/lib/auth"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -44,28 +46,18 @@ export default function LoginPage() {
     }
 
     try {
-      // Replace with your actual API endpoint
-      const response = await fetch("YOUR_FASTAPI_ENDPOINT/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      })
+      // Use the login function from our API client
+      const data = await login(email, password)
 
-      const data = await response.json()
+      // Store token using our auth utility
+      setAuthToken(data.access_token)
+      setRefreshToken(data.refresh_token)
 
-      if (!response.ok) {
-        throw new Error(data.detail || "Login failed")
-      }
+      // Use these 2 lines for debugging ONLY
+      // console.log("Stored access token:", localStorage.getItem("access_token"))
+      // console.log("Stored refresh token:", localStorage.getItem("refresh_token"))
 
-      // Store token or session data
-      localStorage.setItem("token", data.access_token)
-
-      // Redirect to dashboard or home page
+      // Redirect to dashboard
       router.push("/dashboard")
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred")

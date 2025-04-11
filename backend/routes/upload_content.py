@@ -5,7 +5,7 @@ from pydantic import BaseModel, HttpUrl
 
 from db import get_db
 from models.user import User
-from models.content import KnowledgeBase, UploadedContent, ContentChunk
+from models.content import KnowledgeBase, UploadedContent
 from services.auth import get_current_user
 
 from services.extract import extract_md_from_url # TODO: add extract_text_from_file

@@ -137,12 +137,12 @@ export default function LandingPage() {
                 {
                   title: "Intelligent Content Extraction",
                   description:
-                    "Effortlessly import knowledge from URLs, PDFs, documents, and more with our advanced parsing technology that preserves context and structure.",
+                    "Effortlessly import knowledge from URLs, PDFs, documents, and more backed by advanced parsing libraries that preserves context and structure.",
                 },
                 {
-                  title: "AI-Powered Summarization",
+                  title: "AI-Powered Summary Notes",
                   description:
-                    "Get concise, accurate summaries of complex content using our default open-source LLM or connect your preferred state-of-the-art model via API.",
+                    "Get concise, accurate summaries of complex content for quick revision of topics, powered with the latest and the best open-source LLM models.",
                 },
                 {
                   title: "Interactive Flash Cards",
