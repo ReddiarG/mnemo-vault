@@ -1,74 +1,70 @@
-// Refresh the access token using the stored refresh token
-export async function refreshToken():Promise <Boolean> {
-    const refreshToken = localStorage.getItem("refresh_token")
-  
-    if (!refreshToken) return false
-  
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-token`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ refresh_token: refreshToken })
-      })
-  
-      if (!response.ok) {
-        removeAuthToken()
-        removeRefreshToken()
-        return false
-      }
-  
-      const data = await response.json()
-      setAuthToken(data.access_token)
-      setRefreshToken(data.refresh_token)
-      return true
-    } catch (error) {
-      removeAuthToken()
-      removeRefreshToken()
-      return false
-    }
-  }
-  
-  export function getAuthToken() {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("access_token")
-    }
-    return null
-  }
-  
-  export function setAuthToken(accessToken: string) {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("access_token", accessToken)
-    }
-  }
-  
-  export function removeAuthToken() {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("access_token")
-    }
-  }
+import {ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY} from "./constants";
 
-  export function setRefreshToken(refreshToken: string) {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("refresh_token", refreshToken)
-    }
-  }
-  
-  export function getRefreshToken() {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("refresh_token")
-    }
-    return null
-  }
-  
-  export function removeRefreshToken() {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("refresh_token")
-    }
-  }
-  
-  export function isAuthenticated() {
-    return !!getAuthToken()
-  }
-  
+export function getAuthToken() {
+    return typeof window !== "undefined" ? localStorage.getItem(ACCESS_TOKEN_KEY) : null;
+}
+
+export function setAuthToken(token: string) {
+	if (typeof window !== "undefined") {
+		localStorage.setItem(ACCESS_TOKEN_KEY, token);
+	}
+}
+
+export function removeAuthToken() {
+	if (typeof window !== "undefined") {
+		localStorage.removeItem(ACCESS_TOKEN_KEY);
+	}
+}
+
+export function getRefreshToken() {
+	return typeof window !== "undefined" ? localStorage.getItem(REFRESH_TOKEN_KEY) : null;
+}
+
+export function setRefreshToken(token: string) {
+	if (typeof window !== "undefined") {
+		localStorage.setItem(REFRESH_TOKEN_KEY, token);
+	}
+}
+
+export function removeRefreshToken() {
+	if (typeof window !== "undefined") {
+	  	localStorage.removeItem(REFRESH_TOKEN_KEY);
+	}
+}
+
+export function isAuthenticated() {
+	return !!getAuthToken()
+}
+
+export async function refreshToken(): Promise<boolean> {
+	const refreshToken = getRefreshToken();
+	if (!refreshToken) return false;
+
+	try {
+		const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-token`, {
+			method: "POST",
+			headers: { 
+				"Content-Type": "application/json" 
+			},
+			body: JSON.stringify({ 
+				refresh_token: refreshToken 
+			}),
+		});
+
+		if (!response.ok) {
+			removeAuthToken();
+			removeRefreshToken();
+			return false;
+		}
+
+		const data = await response.json();
+		setAuthToken(data.access_token);
+		setRefreshToken(data.refresh_token);
+		return true;
+	} catch (err) {
+		console.error("Token refresh error:", err);
+		removeAuthToken();
+		removeRefreshToken();
+		return false;
+	}
+}
